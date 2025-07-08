@@ -64,6 +64,7 @@ If you're looking to raise an issue with this module, please create a new issue 
 | Name | Version |
 |------|---------|
 | <a name="provider_aws"></a> [aws](#provider\_aws) | ~> 5.0 |
+| <a name="provider_null"></a> [null](#provider\_null) | n/a |
 
 ## Modules
 
@@ -80,6 +81,7 @@ No modules.
 | [aws_wafv2_web_acl.mp_waf_acl](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl) | resource |
 | [aws_wafv2_web_acl_association.mp_waf_acl_association](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl_association) | resource |
 | [aws_wafv2_web_acl_logging_configuration.mp_waf_log_config](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl_logging_configuration) | resource |
+| [null_resource.validate_ddos_config](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
 | [aws_iam_policy_document.waf](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 
 ## Inputs
@@ -90,7 +92,7 @@ No modules.
 | <a name="input_application_name"></a> [application\_name](#input\_application\_name) | Application identifier used for naming and tagging. | `string` | n/a | yes |
 | <a name="input_associated_resource_arns"></a> [associated\_resource\_arns](#input\_associated\_resource\_arns) | List of resource ARNs (e.g. ALB, CloudFront distribution) to associate with the Web ACL. | `list(string)` | `[]` | no |
 | <a name="input_block_non_uk_traffic"></a> [block\_non\_uk\_traffic](#input\_block\_non\_uk\_traffic) | If true, add a WAF rule that blocks any request not originating from the United Kingdom (GB). | `bool` | `false` | no |
-| <a name="input_ddos_rate_limit"></a> [ddos\_rate\_limit](#input\_ddos\_rate\_limit) | Requests per 5‑minute window that triggers the DDoS rate‑based block. Required when enable\_ddos\_protection = true. | `number` | `null` | no |
+| <a name="input_ddos_rate_limit"></a> [ddos\_rate\_limit](#input\_ddos\_rate\_limit) | Requests per 5‑minute window that triggers the DDoS rate‑based block. Required when enable\_ddos\_protection = true. | `number` | n/a | yes |
 | <a name="input_enable_ddos_protection"></a> [enable\_ddos\_protection](#input\_enable\_ddos\_protection) | If true (default), create a Shield‑style rate‑based blocking rule at the WebACL. | `bool` | `true` | no |
 | <a name="input_ip_address_version"></a> [ip\_address\_version](#input\_ip\_address\_version) | IP version for the IP set (IPV4 or IPV6). | `string` | `"IPV4"` | no |
 | <a name="input_log_retention_in_days"></a> [log\_retention\_in\_days](#input\_log\_retention\_in\_days) | Retention period for the WAF logs. | `number` | `365` | no |
