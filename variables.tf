@@ -97,3 +97,14 @@ variable "managed_rule_actions" {
   type = map(bool) # true = block, false = count
   description = "Map of AWS Managed Rule Group names to boolean flag indicating whether to block (true) or count (false)."
 }
+
+variable "additional_managed_rules" {
+  description = "Additional AWS Managed Rule Groups to include in the WebACL."
+  type = list(object({
+    name        = string
+    vendor_name = string
+    version     = optional(string)
+    override_action = optional(string) # 'NONE' or 'COUNT'
+  }))
+  default = []
+}

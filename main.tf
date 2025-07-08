@@ -166,6 +166,40 @@ resource "aws_wafv2_web_acl" "mp_waf_acl" {
     }
   }
 
+
+  dynamic "rule" {
+    for_each = var.additional_managed_rules
+    content {
+      name     = rule.value.name
+      priority = 1000 + index(var.additional_managed_rules, rule.value)
+
+      override_action {
+        dynamic "count" {
+          for_each = rule.value.override_action == "count" ? [1] : []
+          content {}
+        }
+        dynamic "none" {
+          for_each = rule.value.override_action == "none" || rule.value.override_action == null ? [1] : []
+          content {}
+        }
+      }
+
+      statement {
+        managed_rule_group_statement {
+          name        = rule.value.name
+          vendor_name = rule.value.vendor_name
+          version     = try(rule.value.version, null)
+        }
+      }
+
+      visibility_config {
+        cloudwatch_metrics_enabled = true
+        metric_name                = rule.value.name
+        sampled_requests_enabled   = true
+      }
+    }
+  }
+
   #----------------------------------------------------------
   # ACL‑level visibility settings
   #----------------------------------------------------------
