@@ -1,6 +1,4 @@
-
-module "module_test" {
-  source           = "../../"
-  application_name = local.application_name
-  tags             = local.tags
+module "waf" {
+  source = "../" # path to your root module
 }
+
