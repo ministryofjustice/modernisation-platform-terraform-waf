@@ -6,12 +6,39 @@
 
 ```hcl
 
-module "template" {
+module "waf" {
+  source = "MODULE"
+  enable_ddos_protection = true
+  ddos_rate_limit        = 1500
+  block_non_uk_traffic   = true
 
-  source = "github.com/ministryofjustice/modernisation-platform-terraform-module-template"
+  associated_resource_arns = ["add the arn"]
 
+  managed_rule_actions = {
+    AWSManagedRulesKnownBadInputsRuleSet = true
+    AWSManagedRulesCommonRuleSet         = true
+    AWSManagedRulesSQLiRuleSet           = false
+    AWSManagedRulesLinuxRuleSet          = false
+    AWSManagedRulesAnonymousIpList       = true
+    AWSManagedRulesBotControlRuleSet     = true
+  }
+
+  additional_managed_rules = [
+  {
+    name            = "AWSManagedRulesPHPRuleSet"
+    vendor_name     = "AWS"
+    override_action = "count"
+  },
+  {
+    name        = "AWSManagedRulesUnixRuleSet"
+    vendor_name = "AWS"
+    override_action = "count"
+  }
+]
+
+  application_name = local.application_name        
   tags             = local.tags
-  application_name = local.application_name
+
 
 }
 
