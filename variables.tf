@@ -36,10 +36,10 @@ variable "enable_ddos_protection" {
 variable "ddos_rate_limit" {
   description = "Requests per 5‑minute window that triggers the DDoS rate‑based block. Required when enable_ddos_protection = true."
   type        = number
-  default     = null
+  # no default = required
   validation {
-    condition = var.enable_ddos_protection == false || (var.enable_ddos_protection && var.ddos_rate_limit != null && var.ddos_rate_limit > 0)
-    error_message = "ddos_rate_limit must be set to a positive integer when enable_ddos_protection is true."
+    condition     = var.ddos_rate_limit > 0
+    error_message = "ddos_rate_limit must be a positive number."
   }
 }
 
