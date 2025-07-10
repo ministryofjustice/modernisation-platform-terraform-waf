@@ -1,3 +1,7 @@
+data "aws_region" "current" {}
+
+data "aws_caller_identity" "current" {}
+
 ###############################################################################
 # 1.  SSM parameter that holds the JSON array of blocked IPs
 ###############################################################################
@@ -28,11 +32,11 @@ resource "aws_wafv2_ip_set" "mp_waf_ip_set" {
 # 3.  CloudWatch log group for WAF logging
 ###############################################################################
 resource "aws_cloudwatch_log_group" "mp_waf_cloudwatch_log_group" {
+  count             = var.log_destination_arn == null ? 1 : 0
   name              = "aws-waf-logs-${local.base_name}"
   retention_in_days = var.log_retention_in_days
   tags              = local.tags
 }
-
 ###############################################################################
 # 4.  Web ACL with optional rules
 ###############################################################################
@@ -40,7 +44,7 @@ resource "aws_wafv2_web_acl" "mp_waf_acl" {
   name        = local.base_name
   scope       = "REGIONAL"          # change to CLOUDFRONT if needed
   description = "AWS WAF protecting ${local.base_name}"
-
+  depends_on = [aws_wafv2_ip_set.mp_waf_ip_set]
   #----------------------------------------------------------
   # Default action = allow
   #----------------------------------------------------------
@@ -217,13 +221,15 @@ resource "aws_wafv2_web_acl" "mp_waf_acl" {
 ###############################################################################
 data "aws_iam_policy_document" "waf" {
   statement {
-    effect    = "Allow"
+    effect = "Allow"
     principals {
       type        = "Service"
       identifiers = ["delivery.logs.amazonaws.com"]
     }
     actions   = ["logs:CreateLogStream", "logs:PutLogEvents"]
-    resources = ["${aws_cloudwatch_log_group.mp_waf_cloudwatch_log_group.arn}:*"]
+    resources = [
+      "${coalesce(var.log_destination_arn, aws_cloudwatch_log_group.mp_waf_cloudwatch_log_group[0].arn)}:*"
+    ]
   }
 }
 
@@ -233,8 +239,10 @@ resource "aws_cloudwatch_log_resource_policy" "mp_waf_log_policy" {
 }
 
 resource "aws_wafv2_web_acl_logging_configuration" "mp_waf_log_config" {
-  resource_arn            = aws_wafv2_web_acl.mp_waf_acl.arn
-  log_destination_configs = [aws_cloudwatch_log_group.mp_waf_cloudwatch_log_group.arn]
+  resource_arn = aws_wafv2_web_acl.mp_waf_acl.arn
+  log_destination_configs = [
+    coalesce(var.log_destination_arn, aws_cloudwatch_log_group.mp_waf_cloudwatch_log_group[0].arn)
+  ]
 
   depends_on = [aws_cloudwatch_log_resource_policy.mp_waf_log_policy]
 }
@@ -246,4 +254,52 @@ resource "aws_wafv2_web_acl_association" "mp_waf_acl_association" {
   for_each     = toset(var.associated_resource_arns)
   resource_arn = each.value
   web_acl_arn  = aws_wafv2_web_acl.mp_waf_acl.arn
+}
+
+
+
+
+resource "aws_iam_role" "cwl_to_core_logging" {
+  name = "${local.base_name}-cwl-to-core-logging"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = "logs.${data.aws_region.current.name}.amazonaws.com"
+        },
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "cwl_to_core_logging_policy" {
+  name = "${local.base_name}-cwl-to-core-logging-policy"
+  role = aws_iam_role.cwl_to_core_logging.name
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect   = "Allow",
+      Action   = ["logs:PutSubscriptionFilter"],
+      Resource = local.core_logging_cw_destination_resource
+    }]
+  })
+}
+
+
+resource "aws_cloudwatch_log_subscription_filter" "forward_to_core_logging" {
+  name            = "${local.base_name}-waf-to-core-logging"
+  log_group_name = aws_cloudwatch_log_group.mp_waf_cloudwatch_log_group[0].name
+  filter_pattern  = "{$.action = * }"
+  destination_arn = local.core_logging_cw_destination_arn
+  role_arn        = aws_iam_role.cwl_to_core_logging.arn
+
+  depends_on = [
+    aws_cloudwatch_log_group.mp_waf_cloudwatch_log_group,
+    aws_iam_role_policy.cwl_to_core_logging_policy
+  ]
 }
