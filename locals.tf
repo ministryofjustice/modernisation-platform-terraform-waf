@@ -1,6 +1,9 @@
 locals {
   base_name = lower(format("%s-waf", var.application_name))
   tags      = merge(var.tags, { Name = local.base_name })
+  core_logging_account_id = var.core_logging_account_id
+  core_logging_cw_destination_arn      = "arn:aws:logs:eu-west-2:${local.core_logging_account_id}:destination:waf-logs-destination"
+  core_logging_cw_destination_resource = "arn:aws:logs:eu-west-2:${local.core_logging_account_id}:destination/waf-logs-destination"
 
   managed_rule_groups_with_priority = [
     for idx, group in keys(var.managed_rule_actions) : {

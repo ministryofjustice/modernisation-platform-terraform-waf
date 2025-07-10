@@ -11,5 +11,10 @@ output "ip_set_arn" {
 
 output "log_group_name" {
   description = "Name of the CloudWatch log group containing WAF logs."
-  value       = aws_cloudwatch_log_group.mp_waf_cloudwatch_log_group.arn
+  value = aws_cloudwatch_log_group.mp_waf_cloudwatch_log_group[0].arn
+}
+
+output "waf_log_group_arn" {
+  description = "ARN of the log group receiving WAF logs"
+  value       = coalesce(var.log_destination_arn, aws_cloudwatch_log_group.mp_waf_cloudwatch_log_group[0].arn)
 }

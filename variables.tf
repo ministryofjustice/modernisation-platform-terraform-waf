@@ -108,3 +108,13 @@ variable "additional_managed_rules" {
   }))
   default = []
 }
+
+variable "log_destination_arn" {
+  description = "Optional ARN of an existing CloudWatch Log Group to send WAF logs to"
+  type        = string
+  default     = null
+}
+
+variable "core_logging_account_id" {
+  type = string
+}
