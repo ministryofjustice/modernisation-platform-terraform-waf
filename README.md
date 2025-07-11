@@ -97,8 +97,9 @@ No modules.
 | <a name="input_application_name"></a> [application\_name](#input\_application\_name) | Application identifier used for naming and tagging. | `string` | n/a | yes |
 | <a name="input_associated_resource_arns"></a> [associated\_resource\_arns](#input\_associated\_resource\_arns) | List of resource ARNs (e.g. ALB, CloudFront distribution) to associate with the Web ACL. | `list(string)` | `[]` | no |
 | <a name="input_block_non_uk_traffic"></a> [block\_non\_uk\_traffic](#input\_block\_non\_uk\_traffic) | If true, add a WAF rule that blocks any request not originating from the United Kingdom (GB). | `bool` | `false` | no |
-| <a name="input_core_logging_account_id"></a> [core\_logging\_account\_id](#input\_core\_logging\_account\_id) | n/a | `string` | n/a | yes |
+| <a name="input_core_logging_account_id"></a> [core\_logging\_account\_id](#input\_core\_logging\_account\_id) | Account ID for core logging | `string` | `""` | no |
 | <a name="input_ddos_rate_limit"></a> [ddos\_rate\_limit](#input\_ddos\_rate\_limit) | Requests per 5‑minute window that triggers the DDoS rate‑based block. Required when enable\_ddos\_protection = true. | `number` | n/a | yes |
+| <a name="input_enable_core_logging"></a> [enable\_core\_logging](#input\_enable\_core\_logging) | Whether to enable forwarding logs to the core logging account | `bool` | `true` | no |
 | <a name="input_enable_ddos_protection"></a> [enable\_ddos\_protection](#input\_enable\_ddos\_protection) | If true (default), create a Shield‑style rate‑based blocking rule at the WebACL. | `bool` | `true` | no |
 | <a name="input_ip_address_version"></a> [ip\_address\_version](#input\_ip\_address\_version) | IP version for the IP set (IPV4 or IPV6). | `string` | `"IPV4"` | no |
 | <a name="input_log_destination_arn"></a> [log\_destination\_arn](#input\_log\_destination\_arn) | Optional ARN of an existing CloudWatch Log Group to send WAF logs to | `string` | `null` | no |
