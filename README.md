@@ -56,9 +56,8 @@ If you're looking to raise an issue with this module, please create a new issue 
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.10 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.1 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 5.90 |
-| <a name="requirement_http"></a> [http](#requirement\_http) | ~> 3.4 |
 
 ## Providers
 
