@@ -118,6 +118,7 @@ No modules.
 | <a name="output_log_group_name"></a> [log\_group\_name](#output\_log\_group\_name) | Name of the CloudWatch log group containing WAF logs. |
 | <a name="output_waf_log_group_arn"></a> [waf\_log\_group\_arn](#output\_waf\_log\_group\_arn) | ARN of the log group receiving WAF logs |
 | <a name="output_web_acl_arn"></a> [web\_acl\_arn](#output\_web\_acl\_arn) | ARN of the WAFv2 Web ACL. |
+| <a name="output_web_acl_name"></a> [web\_acl\_name](#output\_web\_acl\_name) | Name of the WAF Web ACL |
 <!-- END_TF_DOCS -->
 
 [Standards Link]: https://github-community.service.justice.gov.uk/repository-standards/modernisation-platform-terraform-module-template "Repo standards badge."
