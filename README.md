@@ -18,7 +18,7 @@ module "waf" {
     AWSManagedRulesKnownBadInputsRuleSet = true
     AWSManagedRulesCommonRuleSet         = true
     AWSManagedRulesSQLiRuleSet           = false
-    AWSManagedRulesLinuxRuleSet          = false
+    AWSManagedRulesLinuxRuleSet          = true
     AWSManagedRulesAnonymousIpList       = true
     AWSManagedRulesBotControlRuleSet     = true
   }
