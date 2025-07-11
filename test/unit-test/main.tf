@@ -14,6 +14,6 @@ module "waf" {
   }
   application_name = local.application_name        
   tags             = local.tags
-
+  enable_core_logging =      false
 }
 
