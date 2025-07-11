@@ -292,8 +292,10 @@ resource "aws_iam_role_policy" "cwl_to_core_logging_policy" {
 
 
 resource "aws_cloudwatch_log_subscription_filter" "forward_to_core_logging" {
+  count = var.enable_core_logging ? 1 : 0
+
   name            = "${local.base_name}-waf-to-core-logging"
-  log_group_name = aws_cloudwatch_log_group.mp_waf_cloudwatch_log_group[0].name
+  log_group_name  = aws_cloudwatch_log_group.mp_waf_cloudwatch_log_group[0].name
   filter_pattern  = "{$.action = * }"
   destination_arn = local.core_logging_cw_destination_arn
   role_arn        = aws_iam_role.cwl_to_core_logging.arn
@@ -303,3 +305,4 @@ resource "aws_cloudwatch_log_subscription_filter" "forward_to_core_logging" {
     aws_iam_role_policy.cwl_to_core_logging_policy
   ]
 }
+

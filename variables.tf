@@ -116,5 +116,13 @@ variable "log_destination_arn" {
 }
 
 variable "core_logging_account_id" {
-  type = string
+  description = "Account ID for core logging"
+  type        = string
+  default     = ""
+}
+
+variable "enable_core_logging" {
+  description = "Whether to enable forwarding logs to the core logging account"
+  type        = bool
+  default     = true
 }
