@@ -4,6 +4,17 @@
 
 ## Usage
 
+This module offers various WAF rules as a module, custom ones such as IP Address blocking from an ssm parameter, as well as AWS managed ones.
+
+With the `managed_rule_actions` if the bool is true, it will block traffic, false will leave it in a count mode.
+
+You can pass in more AWS rules with `additional_managed_rules` like the example below.
+
+For `associated_resource_arns` you can supply one or multiple ones.
+
+For `enable_ddos_protection` it covers what is currently offered in the FM module.
+
+
 ```hcl
 
 module "waf" {
