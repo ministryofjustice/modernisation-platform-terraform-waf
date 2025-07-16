@@ -19,20 +19,29 @@ For `enable_ddos_protection` it covers what is currently offered in the FM modul
 
 module "waf" {
   source = "git::https://github.com/ministryofjustice/modernisation-platform-terraform-waf?ref=v0.0.1"
+  providers = {
+    aws.modernisation-platform = aws.modernisation-platform
+  }
+  enable_pagerduty_integration = true
   enable_ddos_protection = true
-  ddos_rate_limit        = 3000
-  block_non_uk_traffic   = true
+  ddos_rate_limit        = 5000
+  block_non_uk_traffic   = false
   associated_resource_arns = [aws_lb.waf_lb.arn]
+  managed_rule_actions = {
+    AWSManagedRulesKnownBadInputsRuleSet = false
+    AWSManagedRulesCommonRuleSet         = false
+    AWSManagedRulesSQLiRuleSet           = false
+    AWSManagedRulesLinuxRuleSet          = false
+    AWSManagedRulesAnonymousIpList       = false
+    AWSManagedRulesBotControlRuleSet     = false
+  }
+  
   core_logging_account_id = local.environment_management.account_ids["core-logging-production"]
 
-  managed_rule_actions = {
-    AWSManagedRulesKnownBadInputsRuleSet = true
-    AWSManagedRulesCommonRuleSet         = true
-    AWSManagedRulesSQLiRuleSet           = true
-    AWSManagedRulesLinuxRuleSet          = true
-    AWSManagedRulesAnonymousIpList       = true
-    AWSManagedRulesBotControlRuleSet     = true
-  }
+  application_name = local.application_name        
+  tags             = local.tags
+}
+
 
 
   additional_managed_rules = [
