@@ -1,24 +1,26 @@
+# ---------------------------------------------------------------------
+# Basic AWS data sources to gather region and caller info
+# ---------------------------------------------------------------------
 data "aws_region" "current" {}
-
 data "aws_caller_identity" "current" {}
 
-###############################################################################
-# 1.  SSM parameter that holds the JSON array of blocked IPs
-###############################################################################
+# ---------------------------------------------------------------------
+# 1. Secure SSM parameter storing the list of blocked IPs as JSON
+# ---------------------------------------------------------------------
 resource "aws_ssm_parameter" "ip_block_list" {
-  # checkov:skip=CKV_AWS_337 – AWS‑managed KMS key is fine
+  # Skipping KMS check as AWS-managed key is acceptable
   name  = var.ssm_parameter_name
   type  = "SecureString"
-  value = "[]"          # initialise empty
+  value = "[]" # Initialized empty list of blocked IPs
 
   lifecycle {
-    ignore_changes = [value]   # allow SOC to edit manually
+    ignore_changes = [value] # Allows SOC to edit manually outside Terraform
   }
 }
 
-###############################################################################
-# 2.  IP set fed from the SSM parameter (used in Rule #1)
-###############################################################################
+# ---------------------------------------------------------------------
+# 2. WAF IP Set populated from the SSM parameter
+# ---------------------------------------------------------------------
 resource "aws_wafv2_ip_set" "mp_waf_ip_set" {
   name               = "${local.base_name}-ip-set"
   scope              = "REGIONAL"
@@ -28,33 +30,30 @@ resource "aws_wafv2_ip_set" "mp_waf_ip_set" {
   tags               = local.tags
 }
 
-###############################################################################
-# 3.  CloudWatch log group for WAF logging
-###############################################################################
+# ---------------------------------------------------------------------
+# 3. CloudWatch log group for WAF logging (only if custom destination not given)
+# ---------------------------------------------------------------------
 resource "aws_cloudwatch_log_group" "mp_waf_cloudwatch_log_group" {
   count             = var.log_destination_arn == null ? 1 : 0
   name              = "aws-waf-logs-${local.base_name}"
   retention_in_days = var.log_retention_in_days
   tags              = local.tags
 }
-###############################################################################
-# 4.  Web ACL with optional rules
-###############################################################################
+
+# ---------------------------------------------------------------------
+# 4. WAF Web ACL with multiple optional and dynamic rules
+# ---------------------------------------------------------------------
 resource "aws_wafv2_web_acl" "mp_waf_acl" {
   name        = local.base_name
-  scope       = "REGIONAL"          # change to CLOUDFRONT if needed
+  scope       = "REGIONAL"
   description = "AWS WAF protecting ${local.base_name}"
-  depends_on = [aws_wafv2_ip_set.mp_waf_ip_set]
-  #----------------------------------------------------------
-  # Default action = allow
-  #----------------------------------------------------------
+  depends_on  = [aws_wafv2_ip_set.mp_waf_ip_set]
+
   default_action {
-    allow {}
+    allow {} # Default action is to allow traffic
   }
 
-  #----------------------------------------------------------
-  # Rule #1 – explicit IP block list
-  #----------------------------------------------------------
+  # Rule 1: Explicit block list using IP set
   rule {
     name     = "${local.base_name}-blocked-ip"
     priority = 1
@@ -76,9 +75,7 @@ resource "aws_wafv2_web_acl" "mp_waf_acl" {
     }
   }
 
-  #----------------------------------------------------------
-  # Rule #2 – optional Shield‑style rate‑based DDoS block
-  #----------------------------------------------------------
+  # Rule 2: Optional DDoS rate-based blocking
   dynamic "rule" {
     for_each = var.enable_ddos_protection ? [1] : []
     content {
@@ -91,7 +88,7 @@ resource "aws_wafv2_web_acl" "mp_waf_acl" {
 
       statement {
         rate_based_statement {
-          limit              = var.ddos_rate_limit     # required when enabled
+          limit              = var.ddos_rate_limit
           aggregate_key_type = "IP"
         }
       }
@@ -104,9 +101,7 @@ resource "aws_wafv2_web_acl" "mp_waf_acl" {
     }
   }
 
-  #----------------------------------------------------------
-  # Rule #3 – optional geo block (everything except UK)
-  #----------------------------------------------------------
+  # Rule 3: Optional geo-block (allow only UK)
   dynamic "rule" {
     for_each = var.block_non_uk_traffic ? [1] : []
     content {
@@ -135,9 +130,7 @@ resource "aws_wafv2_web_acl" "mp_waf_acl" {
     }
   }
 
-  #----------------------------------------------------------
-  # Rule #4+ – managed rule groups
-  #----------------------------------------------------------
+  # Rule 4+: Managed AWS rule groups with custom priority and override action
   dynamic "rule" {
     for_each = local.managed_rule_groups_with_priority
     content {
@@ -170,7 +163,7 @@ resource "aws_wafv2_web_acl" "mp_waf_acl" {
     }
   }
 
-
+  # Optional: Additional managed rules (fallback priority starts at 1000)
   dynamic "rule" {
     for_each = var.additional_managed_rules
     content {
@@ -204,9 +197,7 @@ resource "aws_wafv2_web_acl" "mp_waf_acl" {
     }
   }
 
-  #----------------------------------------------------------
-  # ACL‑level visibility settings
-  #----------------------------------------------------------
+  # Web ACL-level visibility settings
   visibility_config {
     cloudwatch_metrics_enabled = true
     metric_name                = local.base_name
@@ -216,9 +207,9 @@ resource "aws_wafv2_web_acl" "mp_waf_acl" {
   tags = local.tags
 }
 
-###############################################################################
-# 5.  Wire WAF logging to CloudWatch
-###############################################################################
+# ---------------------------------------------------------------------
+# 5. CloudWatch log permissions and integration with WAF
+# ---------------------------------------------------------------------
 data "aws_iam_policy_document" "waf" {
   statement {
     effect = "Allow"
@@ -226,7 +217,7 @@ data "aws_iam_policy_document" "waf" {
       type        = "Service"
       identifiers = ["delivery.logs.amazonaws.com"]
     }
-    actions   = ["logs:CreateLogStream", "logs:PutLogEvents"]
+    actions = ["logs:CreateLogStream", "logs:PutLogEvents"]
     resources = [
       "${coalesce(var.log_destination_arn, aws_cloudwatch_log_group.mp_waf_cloudwatch_log_group[0].arn)}:*"
     ]
@@ -243,22 +234,21 @@ resource "aws_wafv2_web_acl_logging_configuration" "mp_waf_log_config" {
   log_destination_configs = [
     coalesce(var.log_destination_arn, aws_cloudwatch_log_group.mp_waf_cloudwatch_log_group[0].arn)
   ]
-
   depends_on = [aws_cloudwatch_log_resource_policy.mp_waf_log_policy]
 }
 
-###############################################################################
-# 6.  Optional association to ALB / CloudFront / API Gateway, etc.
-###############################################################################
+# ---------------------------------------------------------------------
+# 6. Associate the WAF Web ACL with external resources (ALB, CloudFront, etc.)
+# ---------------------------------------------------------------------
 resource "aws_wafv2_web_acl_association" "mp_waf_acl_association" {
   for_each     = toset(var.associated_resource_arns)
   resource_arn = each.value
   web_acl_arn  = aws_wafv2_web_acl.mp_waf_acl.arn
 }
 
-
-
-
+# ---------------------------------------------------------------------
+# IAM role and policy to forward logs to core logging account
+# ---------------------------------------------------------------------
 resource "aws_iam_role" "cwl_to_core_logging" {
   name = "${local.base_name}-cwl-to-core-logging"
 
@@ -290,7 +280,7 @@ resource "aws_iam_role_policy" "cwl_to_core_logging_policy" {
   })
 }
 
-
+# Optional: Forward logs to core logging account if enabled
 resource "aws_cloudwatch_log_subscription_filter" "forward_to_core_logging" {
   count = var.enable_core_logging ? 1 : 0
 
@@ -306,3 +296,65 @@ resource "aws_cloudwatch_log_subscription_filter" "forward_to_core_logging" {
   ]
 }
 
+# ---------------------------------------------------------------------
+# Optional DDoS alarms via SNS topic and CloudWatch alarms
+# ---------------------------------------------------------------------
+data "aws_kms_key" "sns" {
+  count  = var.enable_ddos_alarms ? 1 : 0
+  key_id = "alias/aws/sns"
+}
+
+resource "aws_sns_topic" "ddos_alarm" {
+  count             = var.enable_ddos_alarms ? 1 : 0
+  name              = "${var.application_name}_ddos_alarm"
+  kms_master_key_id = data.aws_kms_key.sns[0].id
+}
+
+resource "aws_cloudwatch_metric_alarm" "ddos" {
+  for_each = var.enable_ddos_alarms ? var.ddos_alarm_resources : {}
+
+  alarm_name          = format("DDoSDetected-%s", each.key)
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 3
+  metric_name         = "DDoSDetected"
+  namespace           = "AWS/DDoSProtection"
+  period              = 60
+  statistic           = "Average"
+  threshold           = 0
+  treat_missing_data  = "notBreaching"
+  alarm_description   = "Triggers when AWS Shield Advanced detects a DDoS attack"
+  alarm_actions       = [aws_sns_topic.module_ddos_alarm[0].arn]
+  ok_actions          = [aws_sns_topic.module_ddos_alarm[0].arn]
+  dimensions = {
+    ResourceArn = each.value["arn"]
+  }
+}
+
+# ---------------------------------------------------------------------
+# PagerDuty integration for DDoS alarm forwarding
+# ---------------------------------------------------------------------
+data "aws_secretsmanager_secret" "pagerduty_integration_keys" {
+  count    = var.enable_pagerduty_integration ? 1 : 0
+  provider = aws.modernisation-platform
+  name     = "pagerduty_integration_keys"
+}
+
+data "aws_secretsmanager_secret_version" "pagerduty_integration_keys" {
+  count     = var.enable_pagerduty_integration ? 1 : 0
+  provider  = aws.modernisation-platform
+  secret_id = data.aws_secretsmanager_secret.pagerduty_integration_keys[0].id
+}
+
+module "pagerduty_core_alerts" {
+  count                     = var.enable_pagerduty_integration ? 1 : 0
+  depends_on                = [aws_sns_topic.ddos_alarm]
+  source                    = "github.com/ministryofjustice/modernisation-platform-terraform-pagerduty-integration?ref=0179859e6fafc567843cd55c0b05d325d5012dc4"
+  sns_topics                = [aws_sns_topic.ddos_alarm[0].name]
+  pagerduty_integration_key = local.pagerduty_integration_keys["ddos_cloudwatch"]
+}
+
+resource "aws_sns_topic" "module_ddos_alarm" {
+  count             = var.enable_ddos_alarms ? 1 : 0
+  name              = format("%s_ddos_alarm", var.application_name)
+  kms_master_key_id = data.aws_kms_key.sns[0].id
+}
