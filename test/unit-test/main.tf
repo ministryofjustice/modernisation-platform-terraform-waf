@@ -3,7 +3,6 @@ module "waf" {
     providers = {
     aws.modernisation-platform = aws.testing-ci-user
   }
-
   enable_pagerduty_integration         = false
   enable_ddos_alarms = false
   core_logging_account_id = local.environment_management.account_ids["testing-test"]
