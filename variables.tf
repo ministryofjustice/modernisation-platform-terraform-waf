@@ -179,7 +179,7 @@ variable "enable_pagerduty_integration" {
 # Map of monitored resources (by ARN) for DDoS detection alarms
 variable "ddos_alarm_resources" {
   description = "Map of resources to monitor for DDoS alarms. Each value must contain 'arn'."
-  type        = map(object({
+  type = map(object({
     arn = string
   }))
   default = {}

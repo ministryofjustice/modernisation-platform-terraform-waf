@@ -1,7 +1,7 @@
 locals {
-  base_name = lower(format("%s-waf", var.application_name))
-  tags      = merge(var.tags, { Name = local.base_name })
-  core_logging_account_id = var.core_logging_account_id
+  base_name                            = lower(format("%s-waf", var.application_name))
+  tags                                 = merge(var.tags, { Name = local.base_name })
+  core_logging_account_id              = var.core_logging_account_id
   core_logging_cw_destination_arn      = "arn:aws:logs:eu-west-2:${local.core_logging_account_id}:destination:waf-logs-destination"
   core_logging_cw_destination_resource = "arn:aws:logs:eu-west-2:${local.core_logging_account_id}:destination/waf-logs-destination"
 
@@ -16,7 +16,7 @@ locals {
 
   pagerduty_integration_keys = var.enable_pagerduty_integration ? jsondecode(data.aws_secretsmanager_secret_version.pagerduty_integration_keys[0].secret_string) : {}
 
-  
+
   ddos_enabled = var.enable_ddos_protection
 
   ddos_rate_limit_valid = !local.ddos_enabled || (

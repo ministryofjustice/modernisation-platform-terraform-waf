@@ -9,8 +9,8 @@ data "http" "environments_file" {
 
 locals {
 
-  
-  core_logging_account_id = local.environment_management.account_ids["testing-test"]
+
+  core_logging_account_id              = local.environment_management.account_ids["testing-test"]
   core_logging_cw_destination_arn      = "arn:aws:logs:eu-west-2:${local.core_logging_account_id}:destination:waf-logs-destination"
   core_logging_cw_destination_resource = "arn:aws:logs:eu-west-2:${local.core_logging_account_id}:destination/waf-logs-destination"
 

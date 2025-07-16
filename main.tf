@@ -11,10 +11,10 @@ resource "aws_ssm_parameter" "ip_block_list" {
   # Skipping KMS check as AWS-managed key is acceptable
   name  = var.ssm_parameter_name
   type  = "SecureString"
-  value = "[]"  # Initialized empty list of blocked IPs
+  value = "[]" # Initialized empty list of blocked IPs
 
   lifecycle {
-    ignore_changes = [value]  # Allows SOC to edit manually outside Terraform
+    ignore_changes = [value] # Allows SOC to edit manually outside Terraform
   }
 }
 
@@ -50,7 +50,7 @@ resource "aws_wafv2_web_acl" "mp_waf_acl" {
   depends_on  = [aws_wafv2_ip_set.mp_waf_ip_set]
 
   default_action {
-    allow {}  # Default action is to allow traffic
+    allow {} # Default action is to allow traffic
   }
 
   # Rule 1: Explicit block list using IP set
@@ -217,7 +217,7 @@ data "aws_iam_policy_document" "waf" {
       type        = "Service"
       identifiers = ["delivery.logs.amazonaws.com"]
     }
-    actions   = ["logs:CreateLogStream", "logs:PutLogEvents"]
+    actions = ["logs:CreateLogStream", "logs:PutLogEvents"]
     resources = [
       "${coalesce(var.log_destination_arn, aws_cloudwatch_log_group.mp_waf_cloudwatch_log_group[0].arn)}:*"
     ]
@@ -346,10 +346,10 @@ data "aws_secretsmanager_secret_version" "pagerduty_integration_keys" {
 }
 
 module "pagerduty_core_alerts" {
-  count                      = var.enable_pagerduty_integration ? 1 : 0
-  depends_on                 = [aws_sns_topic.ddos_alarm]
-  source                     = "github.com/ministryofjustice/modernisation-platform-terraform-pagerduty-integration?ref=0179859e6fafc567843cd55c0b05d325d5012dc4"
-  sns_topics                 = [aws_sns_topic.ddos_alarm[0].name]
+  count                     = var.enable_pagerduty_integration ? 1 : 0
+  depends_on                = [aws_sns_topic.ddos_alarm]
+  source                    = "github.com/ministryofjustice/modernisation-platform-terraform-pagerduty-integration?ref=0179859e6fafc567843cd55c0b05d325d5012dc4"
+  sns_topics                = [aws_sns_topic.ddos_alarm[0].name]
   pagerduty_integration_key = local.pagerduty_integration_keys["ddos_cloudwatch"]
 }
 
