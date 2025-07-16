@@ -40,5 +40,6 @@ output "ddos_alarm_topic_arn" {
 
 # Name of the SNS topic for DDoS alarms used in PagerDuty module
 output "ddos_alarm_sns_topic_name" {
-  value       = aws_sns_topic.module_ddos_alarm[0].name
+  value = var.enable_ddos_alarms && length(aws_sns_topic.module_ddos_alarm) > 0 ? aws_sns_topic.module_ddos_alarm[0].name : null
 }
+

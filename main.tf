@@ -345,10 +345,6 @@ data "aws_secretsmanager_secret_version" "pagerduty_integration_keys" {
   secret_id = data.aws_secretsmanager_secret.pagerduty_integration_keys[0].id
 }
 
-locals {
-  pagerduty_integration_keys = var.enable_pagerduty_integration ? jsondecode(data.aws_secretsmanager_secret_version.pagerduty_integration_keys[0].secret_string) : {}
-}
-
 module "pagerduty_core_alerts" {
   count                      = var.enable_pagerduty_integration ? 1 : 0
   depends_on                 = [aws_sns_topic.ddos_alarm]
