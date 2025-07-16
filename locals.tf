@@ -14,9 +14,8 @@ locals {
     }
   ]
 
-  pagerduty_integration_keys = var.enable_pagerduty_integration ? jsondecode(
-    data.aws_secretsmanager_secret_version.pagerduty_integration_keys[0].secret_string
-  ) : {}
+  pagerduty_integration_keys = var.enable_pagerduty_integration ? jsondecode(data.aws_secretsmanager_secret_version.pagerduty_integration_keys[0].secret_string) : {}
+
   
   ddos_enabled = var.enable_ddos_protection
 
