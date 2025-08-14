@@ -2,6 +2,23 @@
 
 [![Standards Icon]][Standards Link] [![Format Code Icon]][Format Code Link] [![Scorecards Icon]][Scorecards Link] [![SCA Icon]][SCA Link] [![Terraform SCA Icon]][Terraform SCA Link]
 
+## 🚧 Known Issues & Limitations
+
+### 1. Rule Priority Cannot Currently Be Managed
+There is no way to configure or manage the **priority** of WAF rules within this module.  
+This limitation has been raised as an issue and will be addressed in a future release.
+
+### 2. FM-Managed Rule Conflict for MOJ Teams
+For MOJ teams, a Firewall Manager (FM)–managed rule created in the  
+[`aws-root-account`](https://github.com/ministryofjustice/aws-root-account/blob/main/organisation-security/terraform/firewall-manager.tf) repository  
+(and sometimes also managed via the **environments** repository) **cannot be removed** by this module.
+
+This can cause conflicts or failed `terraform apply` runs when associating resources.  
+A current workaround is to **manually associate the resource to the WAF** after apply.  
+This behaviour has been reported and will be resolved in a future update.
+
+---
+
 ## Usage
 
 This module offers various WAF rules as a module, custom ones such as IP Address blocking from an ssm parameter, as well as AWS managed ones.
