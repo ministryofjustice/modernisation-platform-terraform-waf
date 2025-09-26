@@ -184,3 +184,20 @@ variable "ddos_alarm_resources" {
   }))
   default = {}
 }
+
+variable "managed_rule_priorities" {
+  description = <<EOT
+Map of AWS Managed Rule Group names to explicit priority integers.
+Lower numbers are evaluated first (higher priority).
+If omitted for a rule, a sensible default order is used (10,20,30…).
+EOT
+  type    = map(number)
+  default = {}
+
+  validation {
+    condition = alltrue([
+      for v in values(var.managed_rule_priorities) : v >= 0 && floor(v) == v
+    ])
+    error_message = "All managed_rule_priorities values must be non-negative integers."
+  }
+}
