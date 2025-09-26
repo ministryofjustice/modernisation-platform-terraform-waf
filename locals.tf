@@ -4,9 +4,9 @@ locals {
   core_logging_account_id              = var.core_logging_account_id
   core_logging_cw_destination_arn      = "arn:aws:logs:eu-west-2:${local.core_logging_account_id}:destination:waf-logs-destination"
   core_logging_cw_destination_resource = "arn:aws:logs:eu-west-2:${local.core_logging_account_id}:destination/waf-logs-destination"
-  pagerduty_integration_keys = var.enable_pagerduty_integration ? jsondecode(data.aws_secretsmanager_secret_version.pagerduty_integration_keys[0].secret_string) : {}
-  ddos_enabled         = var.enable_ddos_protection
-  ddos_rate_limit_valid = !local.ddos_enabled || (local.ddos_enabled && var.ddos_rate_limit > 0)
+  pagerduty_integration_keys           = var.enable_pagerduty_integration ? jsondecode(data.aws_secretsmanager_secret_version.pagerduty_integration_keys[0].secret_string) : {}
+  ddos_enabled                         = var.enable_ddos_protection
+  ddos_rate_limit_valid                = !local.ddos_enabled || (local.ddos_enabled && var.ddos_rate_limit > 0)
 }
 
 
@@ -52,10 +52,10 @@ locals {
   #   false => override_action = "none" (respect vendor actions; typically block)
   managed_rule_groups_with_priority = [
     for name in local.default_managed_rule_order : {
-      name           = name
-      vendor_name    = "AWS"
+      name            = name
+      vendor_name     = "AWS"
       override_action = (try(var.managed_rule_actions[name], false) ? "count" : "none")
-      priority       = local.effective_managed_rule_priority_map[name]
+      priority        = local.effective_managed_rule_priority_map[name]
     }
     if contains(keys(var.managed_rule_actions), name)
   ]
@@ -80,4 +80,3 @@ locals {
 
   priorities_are_unique = length(distinct(local.all_priorities_in_use)) == length(local.all_priorities_in_use)
 }
-
