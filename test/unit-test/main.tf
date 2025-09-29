@@ -1,7 +1,7 @@
 module "waf" {
   source = "../../" # path to your root module
   providers = {
-    aws.modernisation-platform = aws.testing-ci-user
+    aws.modernisation-platform = aws
   }
   enable_pagerduty_integration = false
   enable_ddos_alarms           = false
