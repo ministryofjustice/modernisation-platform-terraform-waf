@@ -9,9 +9,9 @@ data "aws_caller_identity" "current" {}
 # ---------------------------------------------------------------------
 resource "aws_ssm_parameter" "ip_block_list" {
   #checkov:skip=CKV_AWS_337:"Skipping KMS check as AWS-managed key is acceptable"
-  name  = var.ssm_parameter_name
-  type  = "SecureString"
-  value = "[]" # Initialized empty list of blocked IPs
+  name   = var.ssm_parameter_name
+  type   = "SecureString"
+  value  = "[]" # Initialized empty list of blocked IPs
   key_id = data.aws_kms_key.sns[0].id
   lifecycle {
     ignore_changes = [value] # Allows SOC to edit manually outside Terraform
